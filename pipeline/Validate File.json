@@ -20,17 +20,17 @@
 						"type": "DatasetReference",
 						"parameters": {
 							"filename": {
-								"value": "@pipeline().parameters.raw_data_filename",
+								"value": "@pipeline().parameters.data_filename",
 								"type": "Expression"
 							},
 							"container": {
-								"value": "@pipeline().globalParameters.raw_container",
+								"value": "@pipeline().parameters.data_container",
 								"type": "Expression"
 							}
 						}
 					},
 					"fieldList": [
-						"itemType"
+						"structure"
 					],
 					"storeSettings": {
 						"type": "AzureBlobStorageReadSettings",
@@ -39,68 +39,6 @@
 					"formatSettings": {
 						"type": "DelimitedTextReadSettings"
 					}
-				}
-			},
-			{
-				"name": "If schema matches",
-				"type": "IfCondition",
-				"dependsOn": [
-					{
-						"activity": "Schema File",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					},
-					{
-						"activity": "Data File",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
-				"userProperties": [],
-				"typeProperties": {
-					"ifTrueActivities": [
-						{
-							"name": "Copy Valid File",
-							"type": "Copy",
-							"dependsOn": [],
-							"policy": {
-								"timeout": "0.12:00:00",
-								"retry": 0,
-								"retryIntervalInSeconds": 30,
-								"secureOutput": false,
-								"secureInput": false
-							},
-							"userProperties": [],
-							"typeProperties": {
-								"source": {
-									"type": "DelimitedTextSource",
-									"storeSettings": {
-										"type": "AzureBlobStorageReadSettings",
-										"recursive": true,
-										"enablePartitionDiscovery": false
-									},
-									"formatSettings": {
-										"type": "DelimitedTextReadSettings"
-									}
-								},
-								"enableStaging": false
-							},
-							"inputs": [
-								{
-									"referenceName": "csv_files",
-									"type": "DatasetReference",
-									"parameters": {
-										"filename": {
-											"value": "@pipeline().parameters.raw_data_filename",
-											"type": "Expression"
-										}
-									}
-								}
-							]
-						}
-					]
 				}
 			},
 			{
@@ -121,17 +59,17 @@
 						"type": "DatasetReference",
 						"parameters": {
 							"filename": {
-								"value": "@pipeline().parameters.raw_schema_filename",
+								"value": "@pipeline().parameters.schema_filename",
 								"type": "Expression"
 							},
 							"container": {
-								"value": "@pipeline().globalParameters.schema_container",
+								"value": "@pipeline().parameters.schema_container",
 								"type": "Expression"
 							}
 						}
 					},
 					"fieldList": [
-						"itemType"
+						"structure"
 					],
 					"storeSettings": {
 						"type": "AzureBlobStorageReadSettings",
