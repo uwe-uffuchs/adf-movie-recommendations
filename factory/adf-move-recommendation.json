@@ -9,6 +9,10 @@
 			"rating_filename": {
 				"type": "string",
 				"value": "ratings.csv"
+			},
+			"schema_filename": {
+				"type": "string",
+				"value": "schema.csv"
 			}
 		},
 		"globalConfigurations": {
