@@ -13,6 +13,10 @@
 			"rejected_container": {
 				"type": "string",
 				"value": "rejected"
+			},
+			"schema_container": {
+				"type": "string",
+				"value": "schema"
 			}
 		},
 		"globalConfigurations": {
