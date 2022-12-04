@@ -2,7 +2,7 @@
 	"name": "adf-move-recommendation",
 	"properties": {
 		"globalParameters": {
-			"movie_filname": {
+			"movie_filename": {
 				"type": "string",
 				"value": "movies.csv"
 			}
