@@ -90,7 +90,13 @@
 							"inputs": [
 								{
 									"referenceName": "csv_files",
-									"type": "DatasetReference"
+									"type": "DatasetReference",
+									"parameters": {
+										"filename": {
+											"value": "@pipeline().parameters.raw_data_filename",
+											"type": "Expression"
+										}
+									}
 								}
 							]
 						}
@@ -119,7 +125,7 @@
 								"type": "Expression"
 							},
 							"container": {
-								"value": "@pipeline().globalParameters.raw_container",
+								"value": "@pipeline().globalParameters.schema_container",
 								"type": "Expression"
 							}
 						}
@@ -138,10 +144,16 @@
 			}
 		],
 		"parameters": {
-			"raw_data_filename": {
+			"data_filename": {
 				"type": "string"
 			},
-			"raw_schema_filename": {
+			"schema_filename": {
+				"type": "string"
+			},
+			"data_container": {
+				"type": "string"
+			},
+			"schema_container": {
 				"type": "string"
 			}
 		},
