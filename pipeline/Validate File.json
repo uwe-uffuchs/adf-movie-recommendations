@@ -83,16 +83,20 @@
 		],
 		"parameters": {
 			"data_filename": {
-				"type": "string"
+				"type": "string",
+				"defaultValue": "movies.csv"
 			},
 			"schema_filename": {
-				"type": "string"
+				"type": "string",
+				"defaultValue": "movies - schema.csv"
 			},
 			"data_container": {
-				"type": "string"
+				"type": "string",
+				"defaultValue": "raw"
 			},
 			"schema_container": {
-				"type": "string"
+				"type": "string",
+				"defaultValue": "schema"
 			}
 		},
 		"folder": {
