@@ -17,6 +17,10 @@
 			"schema_container": {
 				"type": "string",
 				"value": "schema"
+			},
+			"reset_container": {
+				"type": "string",
+				"value": "reset"
 			}
 		},
 		"globalConfigurations": {
