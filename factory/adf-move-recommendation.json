@@ -2,17 +2,17 @@
 	"name": "adf-move-recommendation",
 	"properties": {
 		"globalParameters": {
-			"movie_filename": {
+			"raw_container": {
 				"type": "string",
-				"value": "movies.csv"
+				"value": "raw"
 			},
-			"rating_filename": {
+			"validated_container": {
 				"type": "string",
-				"value": "ratings.csv"
+				"value": "validated/Data"
 			},
-			"schema_filename": {
+			"rejected_container": {
 				"type": "string",
-				"value": "schema.csv"
+				"value": "rejected"
 			}
 		},
 		"globalConfigurations": {
