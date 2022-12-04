@@ -135,3 +135,70 @@ movies_with_average_ratings_dataframe.show(4, truncate = False)
 # DBTITLE 1,Adding movie title to dataset
 movie_title_with_average_ratings_dataframe = movies_with_average_ratings_dataframe.join(movie_dataframe, f.col('movieId') == f.col('ID')).drop('ID')
 movie_title_with_average_ratings_dataframe.show(4, truncate = False)
+
+# COMMAND ----------
+
+# DBTITLE 1,Starting ML train, test & validation
+# We need to hold out 60% for training, 20% for validation, and 20% for testing
+seed = 4
+(training_split_60_dataframe, validation_split_20_dataframe, testing_split_20_dataframe) = rating_dataframe.randomSplit([0.6, 0.2, 0.2], seed)
+
+# Cache dataset for performance
+training_dataframe = training_split_60_dataframe.cache()
+validation_dataframe = validation_split_20_dataframe.cache()
+testing_dataframe = testing_split_20_dataframe.cache()
+
+print('Training {0}, validation {1}, test {2}\n'.format(
+    training_dataframe.count(), validation_dataframe.count(), testing_dataframe.count())
+)
+training_dataframe.show(4, truncate = False)
+validation_dataframe.show(4, truncate = False)
+testing_dataframe.show(4, truncate = False)
+
+# COMMAND ----------
+
+# DBTITLE 1,Alternating Least Square (ALS)
+from pyspark.ml.recommendation import ALS
+als = ALS()
+
+# Reset parameters for ALS
+als.setPredictionCol('prediction')\
+    .setMaxIter(5)\
+    .setSeed(seed)\
+    .setRegParam(0.1)\
+    .setUserCol('userId')\
+    .setItemCol('movieId')\
+    .setRatingCol('rating')\
+    .setRank(8) # Optional rank set to 8
+
+# Create model with these parameters
+my_rating_model = als.fit(training_dataframe)
+
+# COMMAND ----------
+
+# DBTITLE 1,Looking for RMSE again
+from pyspark.ml.evaluation import RegressionEvaluator
+
+from pyspark.sql.functions import col
+# Create RMSE evaluator using the label and predicted columns
+# Essentially it will calculate the RMSE score based on these columns
+reg_evaluation = RegressionEvaluator(predictionCol = 'prediction', labelCol = 'rating', metricName = 'rmse')
+my_predictor_dataframe = my_rating_model.transform(testing_dataframe)
+
+# Remove NaN / NULL values
+predicted_test_dataframe = my_predictor_dataframe.filter(my_predictor_dataframe.prediction != float('nan'))
+
+# Run the previously created RMSE evaluator (reg_evaluation) on the predicted_test_dataframe
+test_rmse_ratings = reg_evaluation.evaluate(predicted_test_dataframe)
+print('The model had a RMSE on the test set of {0}'.format(test_rmse_ratings))
+dbutils.widgets.text('input', '5', '')
+ins = dbutils.widgets.get('input')
+uid = int(ins)
+ll = predicted_test_dataframe.filter(col('userId') == uid)
+
+# COMMAND ----------
+
+# DBTITLE 1,Movie reccommendations for a particular user
+movie_recommendation = ll.join(movie_dataframe, f.col('movieId') == f.col('Id')).drop('Id').select('title').take(10)
+
+l = dbutils.notebook.exit(movie_recommendation)
