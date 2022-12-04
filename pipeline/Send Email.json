@@ -1,8 +1,8 @@
 {
-	"name": "Master",
+	"name": "Send Email",
 	"properties": {
 		"folder": {
-			"name": "01 Orchestrator"
+			"name": "99 Support"
 		},
 		"annotations": []
 	}
