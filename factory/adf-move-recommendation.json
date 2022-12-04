@@ -1,6 +1,12 @@
 {
 	"name": "adf-move-recommendation",
 	"properties": {
+		"globalParameters": {
+			"movie_filname": {
+				"type": "string",
+				"value": "movies.csv"
+			}
+		},
 		"globalConfigurations": {
 			"PipelineBillingEnabled": "true"
 		}
