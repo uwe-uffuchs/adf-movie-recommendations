@@ -115,11 +115,11 @@
 						"type": "DatasetReference",
 						"parameters": {
 							"filename": {
-								"value": "@pipeline().globalParameters.movie_filename",
+								"value": "@pipeline().parameters.raw_schema_filename",
 								"type": "Expression"
 							},
 							"container": {
-								"value": "@pipeline().parameters.raw_container",
+								"value": "@pipeline().globalParameters.raw_container",
 								"type": "Expression"
 							}
 						}
