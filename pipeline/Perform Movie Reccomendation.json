@@ -3,7 +3,7 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "Movie File",
+				"name": "Data File",
 				"type": "GetMetadata",
 				"dependsOn": [],
 				"policy": {
@@ -38,7 +38,63 @@
 				}
 			},
 			{
-				"name": "Rating File",
+				"name": "If schema matches",
+				"type": "IfCondition",
+				"dependsOn": [
+					{
+						"activity": "Schema File",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					},
+					{
+						"activity": "Data File",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"ifTrueActivities": [
+						{
+							"name": "Copy to validated folder",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "DelimitedTextSource",
+									"storeSettings": {
+										"type": "AzureBlobStorageReadSettings",
+										"recursive": true,
+										"enablePartitionDiscovery": false
+									},
+									"formatSettings": {
+										"type": "DelimitedTextReadSettings"
+									}
+								},
+								"enableStaging": false
+							},
+							"inputs": [
+								{
+									"referenceName": "csv_files",
+									"type": "DatasetReference"
+								}
+							]
+						}
+					]
+				}
+			},
+			{
+				"name": "Schema File",
 				"type": "GetMetadata",
 				"dependsOn": [],
 				"policy": {
@@ -55,7 +111,7 @@
 						"type": "DatasetReference",
 						"parameters": {
 							"filename": {
-								"value": "@pipeline().globalParameters.rating_filename",
+								"value": "@pipeline().globalParameters.movie_filename",
 								"type": "Expression"
 							}
 						}
