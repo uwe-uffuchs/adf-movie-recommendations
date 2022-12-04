@@ -1,0 +1,9 @@
+{
+	"name": "adf-move-recommendation",
+	"properties": {
+		"globalConfigurations": {
+			"PipelineBillingEnabled": "true"
+		}
+	},
+	"location": "eastus"
+}
