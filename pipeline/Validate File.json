@@ -20,11 +20,11 @@
 						"type": "DatasetReference",
 						"parameters": {
 							"filename": {
-								"value": "@pipeline().parameters.raw_filename",
+								"value": "@pipeline().parameters.raw_data_filename",
 								"type": "Expression"
 							},
 							"container": {
-								"value": "@pipeline().parameters.raw_container",
+								"value": "@pipeline().globalParameters.raw_container",
 								"type": "Expression"
 							}
 						}
@@ -138,18 +138,6 @@
 			}
 		],
 		"parameters": {
-			"raw_container": {
-				"type": "string"
-			},
-			"rejected_container": {
-				"type": "string"
-			},
-			"valid_container": {
-				"type": "string"
-			},
-			"valid_folder": {
-				"type": "string"
-			},
 			"raw_data_filename": {
 				"type": "string"
 			},
