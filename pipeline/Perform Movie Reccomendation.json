@@ -26,7 +26,7 @@
 						}
 					},
 					"fieldList": [
-						"childItems"
+						"itemType"
 					],
 					"storeSettings": {
 						"type": "AzureBlobStorageReadSettings",
@@ -61,7 +61,7 @@
 						}
 					},
 					"fieldList": [
-						"childItems"
+						"itemType"
 					],
 					"storeSettings": {
 						"type": "AzureBlobStorageReadSettings",
