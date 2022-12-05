@@ -1,0 +1,54 @@
+{
+	"raw_container": {
+		"type": "string",
+		"value": "raw"
+	},
+	"validated_container": {
+		"type": "string",
+		"value": "validated/Data"
+	},
+	"rejected_container": {
+		"type": "string",
+		"value": "rejected"
+	},
+	"schema_container": {
+		"type": "string",
+		"value": "schema"
+	},
+	"reset_container": {
+		"type": "string",
+		"value": "reset"
+	},
+	"movies_filename": {
+		"type": "string",
+		"value": "movies.csv"
+	},
+	"ratings_filename": {
+		"type": "string",
+		"value": "ratings.csv"
+	},
+	"movies_schema_filename": {
+		"type": "string",
+		"value": "movies - schema.csv"
+	},
+	"ratings_schema_filename": {
+		"type": "string",
+		"value": "ratings - schema.csv"
+	},
+	"send_email_url": {
+		"type": "string",
+		"value": "https://prod-31.eastus.logic.azure.com:443/workflows/ce6d4a571f3343898e17334ffdb2d071/triggers/manual/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=GsnU6RseLZiUPGnLeN4b9tF24R2YHyyuz8xXmG1u8DQ"
+	},
+	"email_notifications": {
+		"type": "string",
+		"value": "uwe.fuchs@theta.co.nz"
+	},
+	"environment": {
+		"type": "string",
+		"value": "Test"
+	},
+	"processed_container": {
+		"type": "string",
+		"value": "processed"
+	}
+}

@@ -1,0 +1,1232 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "adf-move-recommendation"
+		},
+		"sastagingfiles_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'sastagingfiles'"
+		},
+		"kvmovierecommendation_properties_typeProperties_baseUrl": {
+			"type": "string",
+			"defaultValue": "https://kvmovierecommendation.vault.azure.net/"
+		},
+		"Azure Databricks_properties_typeProperties_existingClusterId": {
+			"type": "string",
+			"defaultValue": "1130-022637-n4seetmz"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/Send Email')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Send Email",
+						"type": "WebActivity",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"url": {
+								"value": "@pipeline().globalParameters.send_email_url",
+								"type": "Expression"
+							},
+							"method": "POST",
+							"headers": {},
+							"body": {
+								"value": "@concat('{\"subject\": \"', pipeline().parameters.subject, '\",\n\"body\": \"', pipeline().parameters.body, '\",\n\"toEmail\": \"', pipeline().parameters.toEmail, '\"}')",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"parameters": {
+					"toEmail": {
+						"type": "string",
+						"defaultValue": "uwe.fuchs@theta.co.nz"
+					},
+					"body": {
+						"type": "string",
+						"defaultValue": "Test body"
+					},
+					"subject": {
+						"type": "string",
+						"defaultValue": "Test subject"
+					}
+				},
+				"folder": {
+					"name": "99 Support"
+				},
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/kvmovierecommendation')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureKeyVault",
+				"typeProperties": {
+					"baseUrl": "[parameters('kvmovierecommendation_properties_typeProperties_baseUrl')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/sastagingfiles')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobStorage",
+				"typeProperties": {
+					"connectionString": "[parameters('sastagingfiles_connectionString')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/csv_files')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "sastagingfiles",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"filename": {
+						"type": "string"
+					},
+					"container": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": {
+							"value": "@dataset().filename",
+							"type": "Expression"
+						},
+						"container": {
+							"value": "@dataset().container",
+							"type": "Expression"
+						}
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/sastagingfiles')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Azure Databricks')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureDatabricks",
+				"typeProperties": {
+					"domain": "https://adb-2946485730618035.15.azuredatabricks.net",
+					"accessToken": {
+						"type": "AzureKeyVaultSecret",
+						"store": {
+							"referenceName": "kvmovierecommendation",
+							"type": "LinkedServiceReference"
+						},
+						"secretName": "adb-access-token"
+					},
+					"existingClusterId": "[parameters('Azure Databricks_properties_typeProperties_existingClusterId')]"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/kvmovierecommendation')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Copy File')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Copy data",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "DelimitedTextSource",
+								"storeSettings": {
+									"type": "AzureBlobStorageReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "DelimitedTextReadSettings"
+								}
+							},
+							"sink": {
+								"type": "DelimitedTextSink",
+								"storeSettings": {
+									"type": "AzureBlobStorageWriteSettings"
+								},
+								"formatSettings": {
+									"type": "DelimitedTextWriteSettings",
+									"quoteAllText": true,
+									"fileExtension": ".txt"
+								}
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "csv_files",
+								"type": "DatasetReference",
+								"parameters": {
+									"filename": {
+										"value": "@pipeline().parameters.source_filename",
+										"type": "Expression"
+									},
+									"container": {
+										"value": "@pipeline().parameters.source_container",
+										"type": "Expression"
+									}
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "csv_files",
+								"type": "DatasetReference",
+								"parameters": {
+									"filename": {
+										"value": "@pipeline().parameters.destination_filename",
+										"type": "Expression"
+									},
+									"container": {
+										"value": "@pipeline().parameters.destination_container",
+										"type": "Expression"
+									}
+								}
+							}
+						]
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"parameters": {
+					"source_filename": {
+						"type": "string"
+					},
+					"source_container": {
+						"type": "string"
+					},
+					"destination_filename": {
+						"type": "string"
+					},
+					"destination_container": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "02 Worker"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/csv_files')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Delete File')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Delete File",
+						"type": "Delete",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "csv_files",
+								"type": "DatasetReference",
+								"parameters": {
+									"filename": {
+										"value": "@pipeline().parameters.filename",
+										"type": "Expression"
+									},
+									"container": {
+										"value": "@pipeline().parameters.filename",
+										"type": "Expression"
+									}
+								}
+							},
+							"enableLogging": false,
+							"storeSettings": {
+								"type": "AzureBlobStorageReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"parameters": {
+					"filename": {
+						"type": "string"
+					},
+					"container": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "02 Worker"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/csv_files')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Perform ML')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Movies ML",
+						"type": "DatabricksNotebook",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"notebookPath": "/Repos/uwe.uffuchs@gmail.com/adf-movie-recommendations/python/data-wrangling"
+						},
+						"linkedServiceName": {
+							"referenceName": "Azure Databricks",
+							"type": "LinkedServiceReference"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"folder": {
+					"name": "02 Worker"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/Azure Databricks')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Reset')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Check if movies exists",
+						"type": "GetMetadata",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "csv_files",
+								"type": "DatasetReference",
+								"parameters": {
+									"filename": {
+										"value": "@pipeline().globalParameters.movies_filename",
+										"type": "Expression"
+									},
+									"container": {
+										"value": "@pipeline().globalParameters.raw_container",
+										"type": "Expression"
+									}
+								}
+							},
+							"fieldList": [
+								"exists"
+							],
+							"storeSettings": {
+								"type": "AzureBlobStorageReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false
+							},
+							"formatSettings": {
+								"type": "DelimitedTextReadSettings"
+							}
+						}
+					},
+					{
+						"name": "Check if ratings exists",
+						"type": "GetMetadata",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "csv_files",
+								"type": "DatasetReference",
+								"parameters": {
+									"filename": {
+										"value": "ratings.csv",
+										"type": "Expression"
+									},
+									"container": {
+										"value": "@pipeline().globalParameters.raw_container",
+										"type": "Expression"
+									}
+								}
+							},
+							"fieldList": [
+								"exists"
+							],
+							"storeSettings": {
+								"type": "AzureBlobStorageReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false
+							},
+							"formatSettings": {
+								"type": "DelimitedTextReadSettings"
+							}
+						}
+					},
+					{
+						"name": "Copy Movies File",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "Check if movies exists",
+								"dependencyConditions": [
+									"Failed"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "Copy File",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"source_filename": {
+									"value": "@pipeline().globalParameters.movies_filename",
+									"type": "Expression"
+								},
+								"source_container": {
+									"value": "@pipeline().globalParameters.reset_container",
+									"type": "Expression"
+								},
+								"destination_filename": {
+									"value": "@pipeline().globalParameters.movies_filename",
+									"type": "Expression"
+								},
+								"destination_container": {
+									"value": "@pipeline().globalParameters.raw_container",
+									"type": "Expression"
+								}
+							}
+						}
+					},
+					{
+						"name": "Copy Ratings File",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "Check if ratings exists",
+								"dependencyConditions": [
+									"Failed"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "Copy File",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"source_filename": {
+									"value": "@pipeline().globalParameters.ratings_filename",
+									"type": "Expression"
+								},
+								"source_container": {
+									"value": "@pipeline().globalParameters.reset_container",
+									"type": "Expression"
+								},
+								"destination_filename": {
+									"value": "@pipeline().globalParameters.ratings_filename",
+									"type": "Expression"
+								},
+								"destination_container": {
+									"value": "@pipeline().globalParameters.raw_container",
+									"type": "Expression"
+								}
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"folder": {
+					"name": "99 Support"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/csv_files')]",
+				"[concat(variables('factoryId'), '/pipelines/Copy File')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Validate File')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Data File",
+						"type": "GetMetadata",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "csv_files",
+								"type": "DatasetReference",
+								"parameters": {
+									"filename": {
+										"value": "@pipeline().parameters.data_filename",
+										"type": "Expression"
+									},
+									"container": {
+										"value": "@pipeline().parameters.data_container",
+										"type": "Expression"
+									}
+								}
+							},
+							"fieldList": [
+								"structure"
+							],
+							"storeSettings": {
+								"type": "AzureBlobStorageReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false
+							},
+							"formatSettings": {
+								"type": "DelimitedTextReadSettings"
+							}
+						}
+					},
+					{
+						"name": "Schema File",
+						"type": "GetMetadata",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "csv_files",
+								"type": "DatasetReference",
+								"parameters": {
+									"filename": {
+										"value": "@pipeline().parameters.schema_filename",
+										"type": "Expression"
+									},
+									"container": {
+										"value": "@pipeline().parameters.schema_container",
+										"type": "Expression"
+									}
+								}
+							},
+							"fieldList": [
+								"structure"
+							],
+							"storeSettings": {
+								"type": "AzureBlobStorageReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false
+							},
+							"formatSettings": {
+								"type": "DelimitedTextReadSettings"
+							}
+						}
+					},
+					{
+						"name": "If File Valid",
+						"type": "IfCondition",
+						"dependsOn": [
+							{
+								"activity": "Data File",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							},
+							{
+								"activity": "Schema File",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@equals(activity('Schema File').output.structure, activity('Data File').output.structure )",
+								"type": "Expression"
+							},
+							"ifFalseActivities": [
+								{
+									"name": "Copy File - Reject",
+									"type": "ExecutePipeline",
+									"dependsOn": [],
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "Copy File",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"source_filename": {
+												"value": "@pipeline().parameters.data_filename",
+												"type": "Expression"
+											},
+											"source_container": {
+												"value": "@pipeline().parameters.data_container",
+												"type": "Expression"
+											},
+											"destination_filename": {
+												"value": "@concat(string(utcnow()), '_', pipeline().parameters.data_filename)",
+												"type": "Expression"
+											},
+											"destination_container": {
+												"value": "@pipeline().globalParameters.rejected_container",
+												"type": "Expression"
+											}
+										}
+									}
+								},
+								{
+									"name": "Send Email - Copy Reject File Success",
+									"type": "ExecutePipeline",
+									"dependsOn": [
+										{
+											"activity": "Copy File - Reject",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "Send Email",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"toEmail": {
+												"value": "@pipeline().globalParameters.email_notifications",
+												"type": "Expression"
+											},
+											"body": {
+												"value": "@activity('Copy File - Reject').output.pipelineReturnValue",
+												"type": "Expression"
+											},
+											"subject": {
+												"value": "@concat('[', pipeline().globalParameters.environment, '] - Success: ', pipeline().DataFactory)",
+												"type": "Expression"
+											}
+										}
+									}
+								},
+								{
+									"name": "Send Email - Copy Reject File Failure",
+									"type": "ExecutePipeline",
+									"dependsOn": [
+										{
+											"activity": "Copy File - Reject",
+											"dependencyConditions": [
+												"Failed"
+											]
+										}
+									],
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "Send Email",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"toEmail": {
+												"value": "@pipeline().globalParameters.email_notifications",
+												"type": "Expression"
+											},
+											"body": {
+												"value": "@activity('Copy File - Reject').output.pipelineReturnValue",
+												"type": "Expression"
+											},
+											"subject": {
+												"value": "@concat('[', pipeline().globalParameters.environment, '] - Failure: ', pipeline().DataFactory)",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							],
+							"ifTrueActivities": [
+								{
+									"name": "Perform ML",
+									"type": "ExecutePipeline",
+									"dependsOn": [
+										{
+											"activity": "Copy File - Valid",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "Perform ML",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {}
+									}
+								},
+								{
+									"name": "Copy File - Valid",
+									"type": "ExecutePipeline",
+									"dependsOn": [],
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "Copy File",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"source_filename": {
+												"value": "@pipeline().parameters.data_filename",
+												"type": "Expression"
+											},
+											"source_container": {
+												"value": "@pipeline().parameters.data_container",
+												"type": "Expression"
+											},
+											"destination_filename": {
+												"value": "@pipeline().parameters.data_filename",
+												"type": "Expression"
+											},
+											"destination_container": {
+												"value": "@pipeline().globalParameters.validated_container",
+												"type": "Expression"
+											}
+										}
+									}
+								},
+								{
+									"name": "Send Email - Copy Valid File Failure",
+									"type": "ExecutePipeline",
+									"dependsOn": [
+										{
+											"activity": "Copy File - Valid",
+											"dependencyConditions": [
+												"Failed"
+											]
+										}
+									],
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "Send Email",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"toEmail": {
+												"value": "@pipeline().globalParameters.email_notifications",
+												"type": "Expression"
+											},
+											"body": {
+												"value": "@activity('Copy File - Valid').output.pipelineReturnValue",
+												"type": "Expression"
+											},
+											"subject": {
+												"value": "@concat('[', pipeline().globalParameters.environment, '] - Failure: ', pipeline().DataFactory)",
+												"type": "Expression"
+											}
+										}
+									}
+								},
+								{
+									"name": "Send Email - Perform ML Failure",
+									"type": "ExecutePipeline",
+									"dependsOn": [
+										{
+											"activity": "Perform ML",
+											"dependencyConditions": [
+												"Failed"
+											]
+										}
+									],
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "Send Email",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"toEmail": {
+												"value": "@pipeline().globalParameters.email_notifications",
+												"type": "Expression"
+											},
+											"body": {
+												"value": "@activity('Perform ML').output.pipelineReturnValue",
+												"type": "Expression"
+											},
+											"subject": {
+												"value": "@concat('[', pipeline().globalParameters.environment, '] - Failure: ', pipeline().DataFactory)",
+												"type": "Expression"
+											}
+										}
+									}
+								},
+								{
+									"name": "Send Email - Perform ML Success",
+									"type": "ExecutePipeline",
+									"dependsOn": [
+										{
+											"activity": "Perform ML",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "Send Email",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"toEmail": {
+												"value": "@pipeline().globalParameters.email_notifications",
+												"type": "Expression"
+											},
+											"body": {
+												"value": "@activity('Perform ML').output.pipelineReturnValue",
+												"type": "Expression"
+											},
+											"subject": {
+												"value": "@concat('[', pipeline().globalParameters.environment, '] - Success: ', pipeline().DataFactory)",
+												"type": "Expression"
+											}
+										}
+									}
+								},
+								{
+									"name": "Delete File",
+									"type": "ExecutePipeline",
+									"dependsOn": [
+										{
+											"activity": "Copy File - Processed",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "Delete File",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"filename": {
+												"value": "@pipeline().parameters.data_filename",
+												"type": "Expression"
+											},
+											"container": {
+												"value": "@pipeline().globalParameters.validated_container",
+												"type": "Expression"
+											}
+										}
+									}
+								},
+								{
+									"name": "Copy File - Processed",
+									"type": "ExecutePipeline",
+									"dependsOn": [
+										{
+											"activity": "Perform ML",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "Copy File",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"source_filename": {
+												"value": "@pipeline().parameters.data_filename",
+												"type": "Expression"
+											},
+											"source_container": {
+												"value": "@pipeline().globalParameters.validated_container",
+												"type": "Expression"
+											},
+											"destination_filename": {
+												"value": "@concat(string(utcnow()), '_', pipeline().parameters.data_filename)",
+												"type": "Expression"
+											},
+											"destination_container": {
+												"value": "@pipeline().globalParameters.processed_container",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							]
+						}
+					},
+					{
+						"name": "Data file not found - Send Email",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "Data File",
+								"dependencyConditions": [
+									"Failed"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "Send Email",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"toEmail": {
+									"value": "@pipeline().globalParameters.email_notifications",
+									"type": "Expression"
+								},
+								"body": {
+									"value": "@activity('Data File').output",
+									"type": "Expression"
+								},
+								"subject": {
+									"value": "@concat('[', pipeline().globalParameters.environment, '] - Failure: ', pipeline().DataFactory)",
+									"type": "Expression"
+								}
+							}
+						}
+					},
+					{
+						"name": "Schema file not found - Send Email",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "Schema File",
+								"dependencyConditions": [
+									"Failed"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "Send Email",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"toEmail": {
+									"value": "@pipeline().globalParameters.email_notifications",
+									"type": "Expression"
+								},
+								"body": {
+									"value": "@activity('Schema File').output",
+									"type": "Expression"
+								},
+								"subject": {
+									"value": "@concat('[', pipeline().globalParameters.environment, '] - Failure: ', pipeline().DataFactory)",
+									"type": "Expression"
+								}
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"parameters": {
+					"data_filename": {
+						"type": "string",
+						"defaultValue": "movies.csv"
+					},
+					"schema_filename": {
+						"type": "string",
+						"defaultValue": "movies - schema.csv"
+					},
+					"data_container": {
+						"type": "string",
+						"defaultValue": "raw"
+					},
+					"schema_container": {
+						"type": "string",
+						"defaultValue": "schema"
+					}
+				},
+				"folder": {
+					"name": "02 Worker"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/csv_files')]",
+				"[concat(variables('factoryId'), '/pipelines/Send Email')]",
+				"[concat(variables('factoryId'), '/pipelines/Copy File')]",
+				"[concat(variables('factoryId'), '/pipelines/Perform ML')]",
+				"[concat(variables('factoryId'), '/pipelines/Delete File')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Master')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Validate Movie File",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "Reset",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "Validate File",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"data_filename": {
+									"value": "@pipeline().globalParameters.movies_filename",
+									"type": "Expression"
+								},
+								"schema_filename": {
+									"value": "@pipeline().globalParameters.movies_schema_filename",
+									"type": "Expression"
+								},
+								"data_container": {
+									"value": "@pipeline().globalParameters.raw_container",
+									"type": "Expression"
+								},
+								"schema_container": {
+									"value": "@pipeline().globalParameters.schema_container",
+									"type": "Expression"
+								}
+							}
+						}
+					},
+					{
+						"name": "Validate Ratings File",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "Reset",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "Validate File",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"data_filename": {
+									"value": "@pipeline().globalParameters.ratings_filename",
+									"type": "Expression"
+								},
+								"schema_filename": {
+									"value": "@pipeline().globalParameters.ratings_schema_filename",
+									"type": "Expression"
+								},
+								"data_container": {
+									"value": "@pipeline().globalParameters.raw_container",
+									"type": "Expression"
+								},
+								"schema_container": {
+									"value": "@pipeline().globalParameters.schema_container",
+									"type": "Expression"
+								}
+							}
+						}
+					},
+					{
+						"name": "Reset",
+						"type": "ExecutePipeline",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "Reset",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"variables": {
+					"reset": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "01 Orchestrator"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/Validate File')]",
+				"[concat(variables('factoryId'), '/pipelines/Reset')]"
+			]
+		}
+	]
+}
