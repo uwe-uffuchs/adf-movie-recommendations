@@ -99,6 +99,10 @@
 				],
 				"userProperties": [],
 				"typeProperties": {
+					"expression": {
+						"value": "@equals(activity('Schema File').output.structure, activity('Data File').output.structure )",
+						"type": "Expression"
+					},
 					"ifFalseActivities": [
 						{
 							"name": "Copy File - Reject",
