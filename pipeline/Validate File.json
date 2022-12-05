@@ -357,6 +357,74 @@
 									}
 								}
 							}
+						},
+						{
+							"name": "Delete File",
+							"type": "ExecutePipeline",
+							"dependsOn": [
+								{
+									"activity": "Copy File - Processed",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "Delete File",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"filename": {
+										"value": "@pipeline().parameters.data_filename",
+										"type": "Expression"
+									},
+									"container": {
+										"value": "@pipeline().globalParameters.validated_container",
+										"type": "Expression"
+									}
+								}
+							}
+						},
+						{
+							"name": "Copy File - Processed",
+							"type": "ExecutePipeline",
+							"dependsOn": [
+								{
+									"activity": "Perform ML",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "Copy File",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"source_filename": {
+										"value": "@pipeline().parameters.data_filename",
+										"type": "Expression"
+									},
+									"source_container": {
+										"value": "@pipeline().globalParameters.validated_container",
+										"type": "Expression"
+									},
+									"destination_filename": {
+										"value": "@concat(string(utcnow()), '_', pipeline().parameters.data_filename)",
+										"type": "Expression"
+									},
+									"destination_container": {
+										"value": "@pipeline().globalParameters.processed_container",
+										"type": "Expression"
+									}
+								}
+							}
 						}
 					]
 				}
