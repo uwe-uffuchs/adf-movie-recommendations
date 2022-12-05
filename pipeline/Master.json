@@ -198,6 +198,66 @@
 						}
 					}
 				}
+			},
+			{
+				"name": "Delete Movies File",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Copy Movies File",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "Delete File",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"filename": {
+							"value": "@pipeline().globalParameters.movies_filename",
+							"type": "Expression"
+						},
+						"container": {
+							"value": "@pipeline().globalParameters.validated_container",
+							"type": "Expression"
+						}
+					}
+				}
+			},
+			{
+				"name": "Delete Ratings File",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Copy Ratings File",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "Delete File",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"filename": {
+							"value": "@pipeline().globalParameters.ratings_filename",
+							"type": "Expression"
+						},
+						"container": {
+							"value": "@pipeline().globalParameters.validated_container",
+							"type": "Expression"
+						}
+					}
+				}
 			}
 		],
 		"parameters": {
