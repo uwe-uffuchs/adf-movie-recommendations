@@ -1,0 +1,35 @@
+{
+	"name": "Output PL",
+	"properties": {
+		"activities": [
+			{
+				"name": "Set Test1",
+				"type": "SetVariable",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "Test1",
+					"value": {
+						"value": "@pipeline().parameters.Test",
+						"type": "Expression"
+					}
+				}
+			}
+		],
+		"parameters": {
+			"Test": {
+				"type": "string",
+				"defaultValue": "1"
+			}
+		},
+		"variables": {
+			"Test1": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "98 Sandbox"
+		},
+		"annotations": []
+	}
+}
