@@ -308,6 +308,36 @@
 						}
 					}
 				}
+			},
+			{
+				"name": "Delete File",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "If File Valid",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "Delete File",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"filename": {
+							"value": "@pipeline().parameters.data_filename",
+							"type": "Expression"
+						},
+						"container": {
+							"value": "@pipeline().parameters.data_container",
+							"type": "Expression"
+						}
+					}
+				}
 			}
 		],
 		"parameters": {
