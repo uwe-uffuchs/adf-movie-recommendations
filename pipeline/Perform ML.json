@@ -15,14 +15,59 @@
 				},
 				"userProperties": [],
 				"typeProperties": {
-					"notebookPath": "/Repos/uwe.uffuchs@gmail.com/adf-movie-recommendations/python/data-wrangling"
+					"notebookPath": "/Repos/uwe.uffuchs@gmail.com/adf-movie-recommendations/python/data-wrangling",
+					"baseParameters": {
+						"input": {
+							"value": "@pipeline().parameters.usereId",
+							"type": "Expression"
+						}
+					}
 				},
 				"linkedServiceName": {
 					"referenceName": "Azure Databricks",
 					"type": "LinkedServiceReference"
 				}
+			},
+			{
+				"name": "Send Success Email",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Movies ML",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "Send Email",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"toEmail": {
+							"value": "@pipeline().globalParameters.email_notifications",
+							"type": "Expression"
+						},
+						"body": {
+							"value": "@activity('Movies ML').output.runOutput",
+							"type": "Expression"
+						},
+						"subject": {
+							"value": "@concat('[', pipeline().globalParameters.environment, '] - Success: ', pipeline().DataFactory)",
+							"type": "Expression"
+						}
+					}
+				}
 			}
 		],
+		"parameters": {
+			"usereId": {
+				"type": "string"
+			}
+		},
 		"folder": {
 			"name": "02 Worker"
 		},
