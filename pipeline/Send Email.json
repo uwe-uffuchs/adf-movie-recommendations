@@ -21,7 +21,7 @@
 					},
 					"method": "POST",
 					"body": {
-						"value": "@concat('{\"subject\": \"', pipeline().parameters.subject, '\",\n\"body\": \"', pipeline().parameters.body, '\"\n\"toEmail\": \"', pipeline().parameters.toEmail, '\"}')",
+						"value": "@concat('{\"subject\": \"', pipeline().parameters.subject, '\",\n\"body\": \"', pipeline().parameters.body, '\",\n\"toEmail\": \"', pipeline().parameters.toEmail, '\"}')",
 						"type": "Expression"
 					}
 				}
