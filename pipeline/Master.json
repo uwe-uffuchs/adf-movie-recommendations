@@ -90,8 +90,46 @@
 					},
 					"waitOnCompletion": true
 				}
+			},
+			{
+				"name": "Perform ML",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Validate Movie File",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					},
+					{
+						"activity": "Validate Ratings File",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "Perform ML",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"usereId": {
+							"value": "@pipeline().parameters.userId",
+							"type": "Expression"
+						}
+					}
+				}
 			}
 		],
+		"parameters": {
+			"userId": {
+				"type": "string",
+				"defaultValue": "677"
+			}
+		},
 		"variables": {
 			"reset": {
 				"type": "String"
