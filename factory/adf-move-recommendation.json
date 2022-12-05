@@ -21,6 +21,10 @@
 			"reset_container": {
 				"type": "string",
 				"value": "reset"
+			},
+			"movies_filename": {
+				"type": "string",
+				"value": "movies.csv"
 			}
 		},
 		"globalConfigurations": {
