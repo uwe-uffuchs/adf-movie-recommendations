@@ -49,6 +49,10 @@
 			"environment": {
 				"type": "string",
 				"value": "Test"
+			},
+			"processed_container": {
+				"type": "string",
+				"value": "processed"
 			}
 		},
 		"globalConfigurations": {
