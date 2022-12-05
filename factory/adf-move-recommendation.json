@@ -45,6 +45,10 @@
 			"email_notifications": {
 				"type": "string",
 				"value": "uwe.fuchs@theta.co.nz"
+			},
+			"environment": {
+				"type": "string",
+				"value": "Test"
 			}
 		},
 		"globalConfigurations": {
