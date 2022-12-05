@@ -5,7 +5,14 @@
 			{
 				"name": "Validate Movie File",
 				"type": "ExecutePipeline",
-				"dependsOn": [],
+				"dependsOn": [
+					{
+						"activity": "Reset",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
 				"userProperties": [],
 				"typeProperties": {
 					"pipeline": {
@@ -15,11 +22,11 @@
 					"waitOnCompletion": true,
 					"parameters": {
 						"data_filename": {
-							"value": "movies.csv",
+							"value": "@pipeline().globalParameters.movies_filename",
 							"type": "Expression"
 						},
 						"schema_filename": {
-							"value": "movies - schema.csv",
+							"value": "@pipeline().globalParameters.movies_schema_filename",
 							"type": "Expression"
 						},
 						"data_container": {
@@ -36,7 +43,14 @@
 			{
 				"name": "Validate Ratings File",
 				"type": "ExecutePipeline",
-				"dependsOn": [],
+				"dependsOn": [
+					{
+						"activity": "Reset",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
 				"userProperties": [],
 				"typeProperties": {
 					"pipeline": {
@@ -46,11 +60,11 @@
 					"waitOnCompletion": true,
 					"parameters": {
 						"data_filename": {
-							"value": "ratings.csv",
+							"value": "@pipeline().globalParameters.ratings_filename",
 							"type": "Expression"
 						},
 						"schema_filename": {
-							"value": "ratings - schema.csv",
+							"value": "@pipeline().globalParameters.ratings_schema_filename",
 							"type": "Expression"
 						},
 						"data_container": {
@@ -63,8 +77,26 @@
 						}
 					}
 				}
+			},
+			{
+				"name": "Reset",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "Reset",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
 			}
 		],
+		"variables": {
+			"reset": {
+				"type": "String"
+			}
+		},
 		"folder": {
 			"name": "01 Orchestrator"
 		},

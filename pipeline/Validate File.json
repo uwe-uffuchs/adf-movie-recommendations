@@ -81,7 +81,7 @@
 				}
 			},
 			{
-				"name": "If Condition1",
+				"name": "If File Valid",
 				"type": "IfCondition",
 				"dependsOn": [
 					{
@@ -97,7 +97,169 @@
 						]
 					}
 				],
-				"userProperties": []
+				"userProperties": [],
+				"typeProperties": {
+					"ifFalseActivities": [
+						{
+							"name": "Copy data - Reject",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "DelimitedTextSource",
+									"storeSettings": {
+										"type": "AzureBlobStorageReadSettings",
+										"recursive": true,
+										"enablePartitionDiscovery": false
+									},
+									"formatSettings": {
+										"type": "DelimitedTextReadSettings"
+									}
+								},
+								"sink": {
+									"type": "DelimitedTextSink",
+									"storeSettings": {
+										"type": "AzureBlobStorageWriteSettings"
+									},
+									"formatSettings": {
+										"type": "DelimitedTextWriteSettings",
+										"quoteAllText": true,
+										"fileExtension": ".txt"
+									}
+								},
+								"enableStaging": false,
+								"translator": {
+									"type": "TabularTranslator",
+									"typeConversion": true,
+									"typeConversionSettings": {
+										"allowDataTruncation": true,
+										"treatBooleanAsNumber": false
+									}
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "csv_files",
+									"type": "DatasetReference",
+									"parameters": {
+										"filename": {
+											"value": "@pipeline().parameters.data_filename",
+											"type": "Expression"
+										},
+										"container": {
+											"value": "@pipeline().parameters.data_container",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "csv_files",
+									"type": "DatasetReference",
+									"parameters": {
+										"filename": {
+											"value": "@pipeline().parameters.data_filename",
+											"type": "Expression"
+										},
+										"container": {
+											"value": "@pipeline().globalParameters.rejected_container",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						}
+					],
+					"ifTrueActivities": [
+						{
+							"name": "Copy data - Valid",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "DelimitedTextSource",
+									"storeSettings": {
+										"type": "AzureBlobStorageReadSettings",
+										"recursive": true,
+										"enablePartitionDiscovery": false
+									},
+									"formatSettings": {
+										"type": "DelimitedTextReadSettings"
+									}
+								},
+								"sink": {
+									"type": "DelimitedTextSink",
+									"storeSettings": {
+										"type": "AzureBlobStorageWriteSettings"
+									},
+									"formatSettings": {
+										"type": "DelimitedTextWriteSettings",
+										"quoteAllText": true,
+										"fileExtension": ".txt"
+									}
+								},
+								"enableStaging": false,
+								"translator": {
+									"type": "TabularTranslator",
+									"typeConversion": true,
+									"typeConversionSettings": {
+										"allowDataTruncation": true,
+										"treatBooleanAsNumber": false
+									}
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "csv_files",
+									"type": "DatasetReference",
+									"parameters": {
+										"filename": {
+											"value": "@pipeline().parameters.data_filename",
+											"type": "Expression"
+										},
+										"container": {
+											"value": "@pipeline().parameters.data_container",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "csv_files",
+									"type": "DatasetReference",
+									"parameters": {
+										"filename": {
+											"value": "@pipeline().parameters.data_filename",
+											"type": "Expression"
+										},
+										"container": {
+											"value": "@pipeline().globalParameters.validated_container",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						}
+					]
+				}
 			},
 			{
 				"name": "Data file not found - Send Email",

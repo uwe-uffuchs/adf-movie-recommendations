@@ -20,7 +20,7 @@
 						"type": "DatasetReference",
 						"parameters": {
 							"filename": {
-								"value": "movies.csv",
+								"value": "@pipeline().globalParameters.movies_filename",
 								"type": "Expression"
 							},
 							"container": {
@@ -77,6 +77,82 @@
 					},
 					"formatSettings": {
 						"type": "DelimitedTextReadSettings"
+					}
+				}
+			},
+			{
+				"name": "Copy Movies File",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Check if movies exists",
+						"dependencyConditions": [
+							"Failed"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "Copy File",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"source_filename": {
+							"value": "@pipeline().globalParameters.movies_filename",
+							"type": "Expression"
+						},
+						"source_container": {
+							"value": "@pipeline().globalParameters.reset_container",
+							"type": "Expression"
+						},
+						"destination_filename": {
+							"value": "@pipeline().globalParameters.movies_filename",
+							"type": "Expression"
+						},
+						"destination_container": {
+							"value": "@pipeline().globalParameters.raw_container",
+							"type": "Expression"
+						}
+					}
+				}
+			},
+			{
+				"name": "Copy Ratings File",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Check if ratings exists",
+						"dependencyConditions": [
+							"Failed"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "Copy File",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"source_filename": {
+							"value": "@pipeline().globalParameters.ratings_filename",
+							"type": "Expression"
+						},
+						"source_container": {
+							"value": "@pipeline().globalParameters.reset_container",
+							"type": "Expression"
+						},
+						"destination_filename": {
+							"value": "@pipeline().globalParameters.ratings_filename",
+							"type": "Expression"
+						},
+						"destination_container": {
+							"value": "@pipeline().globalParameters.raw_container",
+							"type": "Expression"
+						}
 					}
 				}
 			}
