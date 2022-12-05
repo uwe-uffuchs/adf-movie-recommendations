@@ -29,6 +29,10 @@
 			"ratings_filename": {
 				"type": "string",
 				"value": "ratings.csv"
+			},
+			"movies_schema_filename": {
+				"type": "string",
+				"value": "movies - schema.csv"
 			}
 		},
 		"globalConfigurations": {
