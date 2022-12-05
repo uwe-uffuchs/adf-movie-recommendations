@@ -257,6 +257,26 @@
 									}
 								}
 							]
+						},
+						{
+							"name": "Perform ML",
+							"type": "ExecutePipeline",
+							"dependsOn": [
+								{
+									"activity": "Copy data - Valid",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "Perform ML",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true
+							}
 						}
 					]
 				}
