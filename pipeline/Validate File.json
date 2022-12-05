@@ -1,0 +1,524 @@
+{
+	"name": "Validate File",
+	"properties": {
+		"activities": [
+			{
+				"name": "Data File",
+				"type": "GetMetadata",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "csv_files",
+						"type": "DatasetReference",
+						"parameters": {
+							"filename": {
+								"value": "@pipeline().parameters.data_filename",
+								"type": "Expression"
+							},
+							"container": {
+								"value": "@pipeline().parameters.data_container",
+								"type": "Expression"
+							}
+						}
+					},
+					"fieldList": [
+						"structure"
+					],
+					"storeSettings": {
+						"type": "AzureBlobStorageReadSettings",
+						"enablePartitionDiscovery": false
+					},
+					"formatSettings": {
+						"type": "DelimitedTextReadSettings"
+					}
+				}
+			},
+			{
+				"name": "Schema File",
+				"type": "GetMetadata",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "csv_files",
+						"type": "DatasetReference",
+						"parameters": {
+							"filename": {
+								"value": "@pipeline().parameters.schema_filename",
+								"type": "Expression"
+							},
+							"container": {
+								"value": "@pipeline().parameters.schema_container",
+								"type": "Expression"
+							}
+						}
+					},
+					"fieldList": [
+						"structure"
+					],
+					"storeSettings": {
+						"type": "AzureBlobStorageReadSettings",
+						"enablePartitionDiscovery": false
+					},
+					"formatSettings": {
+						"type": "DelimitedTextReadSettings"
+					}
+				}
+			},
+			{
+				"name": "If File Valid",
+				"type": "IfCondition",
+				"dependsOn": [
+					{
+						"activity": "Data File",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					},
+					{
+						"activity": "Schema File",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@equals(activity('Schema File').output.structure, activity('Data File').output.structure )",
+						"type": "Expression"
+					},
+					"ifFalseActivities": [
+						{
+							"name": "Copy File - Reject",
+							"type": "ExecutePipeline",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "Copy File",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"source_filename": {
+										"value": "@pipeline().parameters.data_filename",
+										"type": "Expression"
+									},
+									"source_container": {
+										"value": "@pipeline().parameters.data_container",
+										"type": "Expression"
+									},
+									"destination_filename": {
+										"value": "@concat(string(utcnow()), '_', pipeline().parameters.data_filename)",
+										"type": "Expression"
+									},
+									"destination_container": {
+										"value": "@pipeline().globalParameters.rejected_container",
+										"type": "Expression"
+									}
+								}
+							}
+						},
+						{
+							"name": "Send Email - Copy Reject File Success",
+							"type": "ExecutePipeline",
+							"dependsOn": [
+								{
+									"activity": "Copy File - Reject",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "Send Email",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"toEmail": {
+										"value": "@pipeline().globalParameters.email_notifications",
+										"type": "Expression"
+									},
+									"body": {
+										"value": "@activity('Copy File - Reject').output.pipelineReturnValue",
+										"type": "Expression"
+									},
+									"subject": {
+										"value": "@concat('[', pipeline().globalParameters.environment, '] - Success: ', pipeline().DataFactory)",
+										"type": "Expression"
+									}
+								}
+							}
+						},
+						{
+							"name": "Send Email - Copy Reject File Failure",
+							"type": "ExecutePipeline",
+							"dependsOn": [
+								{
+									"activity": "Copy File - Reject",
+									"dependencyConditions": [
+										"Failed"
+									]
+								}
+							],
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "Send Email",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"toEmail": {
+										"value": "@pipeline().globalParameters.email_notifications",
+										"type": "Expression"
+									},
+									"body": {
+										"value": "@activity('Copy File - Reject').output.pipelineReturnValue",
+										"type": "Expression"
+									},
+									"subject": {
+										"value": "@concat('[', pipeline().globalParameters.environment, '] - Failure: ', pipeline().DataFactory)",
+										"type": "Expression"
+									}
+								}
+							}
+						}
+					],
+					"ifTrueActivities": [
+						{
+							"name": "Perform ML",
+							"type": "ExecutePipeline",
+							"dependsOn": [
+								{
+									"activity": "Copy File - Valid",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "Perform ML",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true
+							}
+						},
+						{
+							"name": "Copy File - Valid",
+							"type": "ExecutePipeline",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "Copy File",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"source_filename": {
+										"value": "@pipeline().parameters.data_filename",
+										"type": "Expression"
+									},
+									"source_container": {
+										"value": "@pipeline().parameters.data_container",
+										"type": "Expression"
+									},
+									"destination_filename": {
+										"value": "@pipeline().parameters.data_filename",
+										"type": "Expression"
+									},
+									"destination_container": {
+										"value": "@pipeline().globalParameters.validated_container",
+										"type": "Expression"
+									}
+								}
+							}
+						},
+						{
+							"name": "Send Email - Copy Valid File Failure",
+							"type": "ExecutePipeline",
+							"dependsOn": [
+								{
+									"activity": "Copy File - Valid",
+									"dependencyConditions": [
+										"Failed"
+									]
+								}
+							],
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "Send Email",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"toEmail": {
+										"value": "@pipeline().globalParameters.email_notifications",
+										"type": "Expression"
+									},
+									"body": {
+										"value": "@activity('Copy File - Valid').output.pipelineReturnValue",
+										"type": "Expression"
+									},
+									"subject": {
+										"value": "@concat('[', pipeline().globalParameters.environment, '] - Failure: ', pipeline().DataFactory)",
+										"type": "Expression"
+									}
+								}
+							}
+						},
+						{
+							"name": "Send Email - Perform ML Failure",
+							"type": "ExecutePipeline",
+							"dependsOn": [
+								{
+									"activity": "Perform ML",
+									"dependencyConditions": [
+										"Failed"
+									]
+								}
+							],
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "Send Email",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"toEmail": {
+										"value": "@pipeline().globalParameters.email_notifications",
+										"type": "Expression"
+									},
+									"body": {
+										"value": "@activity('Perform ML').output.pipelineReturnValue",
+										"type": "Expression"
+									},
+									"subject": {
+										"value": "@concat('[', pipeline().globalParameters.environment, '] - Failure: ', pipeline().DataFactory)",
+										"type": "Expression"
+									}
+								}
+							}
+						},
+						{
+							"name": "Send Email - Perform ML Success",
+							"type": "ExecutePipeline",
+							"dependsOn": [
+								{
+									"activity": "Perform ML",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "Send Email",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"toEmail": {
+										"value": "@pipeline().globalParameters.email_notifications",
+										"type": "Expression"
+									},
+									"body": {
+										"value": "@activity('Perform ML').output.pipelineReturnValue",
+										"type": "Expression"
+									},
+									"subject": {
+										"value": "@concat('[', pipeline().globalParameters.environment, '] - Success: ', pipeline().DataFactory)",
+										"type": "Expression"
+									}
+								}
+							}
+						},
+						{
+							"name": "Delete File",
+							"type": "ExecutePipeline",
+							"dependsOn": [
+								{
+									"activity": "Copy File - Processed",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "Delete File",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"filename": {
+										"value": "@pipeline().parameters.data_filename",
+										"type": "Expression"
+									},
+									"container": {
+										"value": "@pipeline().globalParameters.validated_container",
+										"type": "Expression"
+									}
+								}
+							}
+						},
+						{
+							"name": "Copy File - Processed",
+							"type": "ExecutePipeline",
+							"dependsOn": [
+								{
+									"activity": "Perform ML",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "Copy File",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"source_filename": {
+										"value": "@pipeline().parameters.data_filename",
+										"type": "Expression"
+									},
+									"source_container": {
+										"value": "@pipeline().globalParameters.validated_container",
+										"type": "Expression"
+									},
+									"destination_filename": {
+										"value": "@concat(string(utcnow()), '_', pipeline().parameters.data_filename)",
+										"type": "Expression"
+									},
+									"destination_container": {
+										"value": "@pipeline().globalParameters.processed_container",
+										"type": "Expression"
+									}
+								}
+							}
+						}
+					]
+				}
+			},
+			{
+				"name": "Data file not found - Send Email",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Data File",
+						"dependencyConditions": [
+							"Failed"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "Send Email",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"toEmail": {
+							"value": "@pipeline().globalParameters.email_notifications",
+							"type": "Expression"
+						},
+						"body": {
+							"value": "@activity('Data File').output",
+							"type": "Expression"
+						},
+						"subject": {
+							"value": "@concat('[', pipeline().globalParameters.environment, '] - Failure: ', pipeline().DataFactory)",
+							"type": "Expression"
+						}
+					}
+				}
+			},
+			{
+				"name": "Schema file not found - Send Email",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Schema File",
+						"dependencyConditions": [
+							"Failed"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "Send Email",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"toEmail": {
+							"value": "@pipeline().globalParameters.email_notifications",
+							"type": "Expression"
+						},
+						"body": {
+							"value": "@activity('Schema File').output",
+							"type": "Expression"
+						},
+						"subject": {
+							"value": "@concat('[', pipeline().globalParameters.environment, '] - Failure: ', pipeline().DataFactory)",
+							"type": "Expression"
+						}
+					}
+				}
+			}
+		],
+		"parameters": {
+			"data_filename": {
+				"type": "string",
+				"defaultValue": "movies.csv"
+			},
+			"schema_filename": {
+				"type": "string",
+				"defaultValue": "movies - schema.csv"
+			},
+			"data_container": {
+				"type": "string",
+				"defaultValue": "raw"
+			},
+			"schema_container": {
+				"type": "string",
+				"defaultValue": "schema"
+			}
+		},
+		"folder": {
+			"name": "02 Worker"
+		},
+		"annotations": []
+	}
+}

@@ -1,0 +1,49 @@
+{
+	"name": "Send Email",
+	"properties": {
+		"activities": [
+			{
+				"name": "Send Email",
+				"type": "WebActivity",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"url": {
+						"value": "@pipeline().globalParameters.send_email_url",
+						"type": "Expression"
+					},
+					"method": "POST",
+					"body": {
+						"value": "@concat('{\"subject\": \"', pipeline().parameters.subject, '\",\n\"body\": \"', pipeline().parameters.body, '\",\n\"toEmail\": \"', pipeline().parameters.toEmail, '\"}')",
+						"type": "Expression"
+					}
+				}
+			}
+		],
+		"parameters": {
+			"toEmail": {
+				"type": "string",
+				"defaultValue": "uwe.fuchs@theta.co.nz"
+			},
+			"body": {
+				"type": "string",
+				"defaultValue": "Test body"
+			},
+			"subject": {
+				"type": "string",
+				"defaultValue": "Test subject"
+			}
+		},
+		"folder": {
+			"name": "99 Support"
+		},
+		"annotations": []
+	}
+}

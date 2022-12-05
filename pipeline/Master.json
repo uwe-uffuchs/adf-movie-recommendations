@@ -1,0 +1,105 @@
+{
+	"name": "Master",
+	"properties": {
+		"activities": [
+			{
+				"name": "Validate Movie File",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Reset",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "Validate File",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"data_filename": {
+							"value": "@pipeline().globalParameters.movies_filename",
+							"type": "Expression"
+						},
+						"schema_filename": {
+							"value": "@pipeline().globalParameters.movies_schema_filename",
+							"type": "Expression"
+						},
+						"data_container": {
+							"value": "@pipeline().globalParameters.raw_container",
+							"type": "Expression"
+						},
+						"schema_container": {
+							"value": "@pipeline().globalParameters.schema_container",
+							"type": "Expression"
+						}
+					}
+				}
+			},
+			{
+				"name": "Validate Ratings File",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Reset",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "Validate File",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"data_filename": {
+							"value": "@pipeline().globalParameters.ratings_filename",
+							"type": "Expression"
+						},
+						"schema_filename": {
+							"value": "@pipeline().globalParameters.ratings_schema_filename",
+							"type": "Expression"
+						},
+						"data_container": {
+							"value": "@pipeline().globalParameters.raw_container",
+							"type": "Expression"
+						},
+						"schema_container": {
+							"value": "@pipeline().globalParameters.schema_container",
+							"type": "Expression"
+						}
+					}
+				}
+			},
+			{
+				"name": "Reset",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "Reset",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			}
+		],
+		"variables": {
+			"reset": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "01 Orchestrator"
+		},
+		"annotations": []
+	}
+}

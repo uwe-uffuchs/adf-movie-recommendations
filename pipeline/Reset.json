@@ -1,0 +1,165 @@
+{
+	"name": "Reset",
+	"properties": {
+		"activities": [
+			{
+				"name": "Check if movies exists",
+				"type": "GetMetadata",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "csv_files",
+						"type": "DatasetReference",
+						"parameters": {
+							"filename": {
+								"value": "@pipeline().globalParameters.movies_filename",
+								"type": "Expression"
+							},
+							"container": {
+								"value": "@pipeline().globalParameters.raw_container",
+								"type": "Expression"
+							}
+						}
+					},
+					"fieldList": [
+						"exists"
+					],
+					"storeSettings": {
+						"type": "AzureBlobStorageReadSettings",
+						"enablePartitionDiscovery": false
+					},
+					"formatSettings": {
+						"type": "DelimitedTextReadSettings"
+					}
+				}
+			},
+			{
+				"name": "Check if ratings exists",
+				"type": "GetMetadata",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "csv_files",
+						"type": "DatasetReference",
+						"parameters": {
+							"filename": {
+								"value": "ratings.csv",
+								"type": "Expression"
+							},
+							"container": {
+								"value": "@pipeline().globalParameters.raw_container",
+								"type": "Expression"
+							}
+						}
+					},
+					"fieldList": [
+						"exists"
+					],
+					"storeSettings": {
+						"type": "AzureBlobStorageReadSettings",
+						"enablePartitionDiscovery": false
+					},
+					"formatSettings": {
+						"type": "DelimitedTextReadSettings"
+					}
+				}
+			},
+			{
+				"name": "Copy Movies File",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Check if movies exists",
+						"dependencyConditions": [
+							"Failed"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "Copy File",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"source_filename": {
+							"value": "@pipeline().globalParameters.movies_filename",
+							"type": "Expression"
+						},
+						"source_container": {
+							"value": "@pipeline().globalParameters.reset_container",
+							"type": "Expression"
+						},
+						"destination_filename": {
+							"value": "@pipeline().globalParameters.movies_filename",
+							"type": "Expression"
+						},
+						"destination_container": {
+							"value": "@pipeline().globalParameters.raw_container",
+							"type": "Expression"
+						}
+					}
+				}
+			},
+			{
+				"name": "Copy Ratings File",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Check if ratings exists",
+						"dependencyConditions": [
+							"Failed"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "Copy File",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"source_filename": {
+							"value": "@pipeline().globalParameters.ratings_filename",
+							"type": "Expression"
+						},
+						"source_container": {
+							"value": "@pipeline().globalParameters.reset_container",
+							"type": "Expression"
+						},
+						"destination_filename": {
+							"value": "@pipeline().globalParameters.ratings_filename",
+							"type": "Expression"
+						},
+						"destination_container": {
+							"value": "@pipeline().globalParameters.raw_container",
+							"type": "Expression"
+						}
+					}
+				}
+			}
+		],
+		"folder": {
+			"name": "99 Support"
+		},
+		"annotations": []
+	}
+}
