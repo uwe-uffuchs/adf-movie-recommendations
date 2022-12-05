@@ -25,6 +25,10 @@
 			"movies_filename": {
 				"type": "string",
 				"value": "movies.csv"
+			},
+			"ratings_filename": {
+				"type": "string",
+				"value": "ratings.csv"
 			}
 		},
 		"globalConfigurations": {
