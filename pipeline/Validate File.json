@@ -134,6 +134,74 @@
 									}
 								}
 							}
+						},
+						{
+							"name": "Send Email - Copy Reject File Success",
+							"type": "ExecutePipeline",
+							"dependsOn": [
+								{
+									"activity": "Copy File - Reject",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "Send Email",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"toEmail": {
+										"value": "@pipeline().globalParameters.email_notifications",
+										"type": "Expression"
+									},
+									"body": {
+										"value": "@activity('Copy File - Reject').output.pipelineReturnValue",
+										"type": "Expression"
+									},
+									"subject": {
+										"value": "@concat('[', pipeline().globalParameters.environment, '] - Success: ', pipeline().DataFactory)",
+										"type": "Expression"
+									}
+								}
+							}
+						},
+						{
+							"name": "Send Email - Copy Reject File Failure",
+							"type": "ExecutePipeline",
+							"dependsOn": [
+								{
+									"activity": "Copy File - Reject",
+									"dependencyConditions": [
+										"Failed"
+									]
+								}
+							],
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "Send Email",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"toEmail": {
+										"value": "@pipeline().globalParameters.email_notifications",
+										"type": "Expression"
+									},
+									"body": {
+										"value": "@activity('Copy File - Reject').output.pipelineReturnValue",
+										"type": "Expression"
+									},
+									"subject": {
+										"value": "@concat('[', pipeline().globalParameters.environment, '] - Failure: ', pipeline().DataFactory)",
+										"type": "Expression"
+									}
+								}
+							}
 						}
 					],
 					"ifTrueActivities": [
@@ -187,6 +255,108 @@
 									}
 								}
 							}
+						},
+						{
+							"name": "Send Email - Copy Valid File Failure",
+							"type": "ExecutePipeline",
+							"dependsOn": [
+								{
+									"activity": "Copy File - Valid",
+									"dependencyConditions": [
+										"Failed"
+									]
+								}
+							],
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "Send Email",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"toEmail": {
+										"value": "@pipeline().globalParameters.email_notifications",
+										"type": "Expression"
+									},
+									"body": {
+										"value": "@activity('Copy File - Valid').output.pipelineReturnValue",
+										"type": "Expression"
+									},
+									"subject": {
+										"value": "@concat('[', pipeline().globalParameters.environment, '] - Failure: ', pipeline().DataFactory)",
+										"type": "Expression"
+									}
+								}
+							}
+						},
+						{
+							"name": "Send Email - Perform ML Failure",
+							"type": "ExecutePipeline",
+							"dependsOn": [
+								{
+									"activity": "Perform ML",
+									"dependencyConditions": [
+										"Failed"
+									]
+								}
+							],
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "Send Email",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"toEmail": {
+										"value": "@pipeline().globalParameters.email_notifications",
+										"type": "Expression"
+									},
+									"body": {
+										"value": "@activity('Perform ML').output.pipelineReturnValue",
+										"type": "Expression"
+									},
+									"subject": {
+										"value": "@concat('[', pipeline().globalParameters.environment, '] - Failure: ', pipeline().DataFactory)",
+										"type": "Expression"
+									}
+								}
+							}
+						},
+						{
+							"name": "Send Email - Perform ML Success",
+							"type": "ExecutePipeline",
+							"dependsOn": [
+								{
+									"activity": "Perform ML",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "Send Email",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"toEmail": {
+										"value": "@pipeline().globalParameters.email_notifications",
+										"type": "Expression"
+									},
+									"body": {
+										"value": "@activity('Perform ML').output.pipelineReturnValue",
+										"type": "Expression"
+									},
+									"subject": {
+										"value": "@concat('[', pipeline().globalParameters.environment, '] - Success: ', pipeline().DataFactory)",
+										"type": "Expression"
+									}
+								}
+							}
 						}
 					]
 				}
@@ -208,7 +378,21 @@
 						"referenceName": "Send Email",
 						"type": "PipelineReference"
 					},
-					"waitOnCompletion": true
+					"waitOnCompletion": true,
+					"parameters": {
+						"toEmail": {
+							"value": "@pipeline().globalParameters.email_notifications",
+							"type": "Expression"
+						},
+						"body": {
+							"value": "@activity('Data File').output",
+							"type": "Expression"
+						},
+						"subject": {
+							"value": "@concat('[', pipeline().globalParameters.environment, '] - Failure: ', pipeline().DataFactory)",
+							"type": "Expression"
+						}
+					}
 				}
 			},
 			{
@@ -228,7 +412,21 @@
 						"referenceName": "Send Email",
 						"type": "PipelineReference"
 					},
-					"waitOnCompletion": true
+					"waitOnCompletion": true,
+					"parameters": {
+						"toEmail": {
+							"value": "@pipeline().globalParameters.email_notifications",
+							"type": "Expression"
+						},
+						"body": {
+							"value": "@activity('Schema File').output",
+							"type": "Expression"
+						},
+						"subject": {
+							"value": "@concat('[', pipeline().globalParameters.environment, '] - Failure: ', pipeline().DataFactory)",
+							"type": "Expression"
+						}
+					}
 				}
 			}
 		],
