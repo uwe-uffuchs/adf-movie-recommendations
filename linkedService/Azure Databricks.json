@@ -1,0 +1,19 @@
+{
+	"name": "Azure Databricks",
+	"properties": {
+		"annotations": [],
+		"type": "AzureDatabricks",
+		"typeProperties": {
+			"domain": "https://adb-2946485730618035.15.azuredatabricks.net",
+			"accessToken": {
+				"type": "AzureKeyVaultSecret",
+				"store": {
+					"referenceName": "kvmovierecommendation",
+					"type": "LinkedServiceReference"
+				},
+				"secretName": "adb-access-token"
+			},
+			"existingClusterId": "1130-022637-n4seetmz"
+		}
+	}
+}
