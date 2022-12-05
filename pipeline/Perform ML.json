@@ -56,7 +56,7 @@
 							"type": "Expression"
 						},
 						"subject": {
-							"value": "@concat('[', pipeline().globalParameters.environment, '] - Failure: ', pipeline().DataFactory)",
+							"value": "@concat('[', pipeline().globalParameters.environment, '] - Success: ', pipeline().DataFactory)",
 							"type": "Expression"
 						}
 					}
