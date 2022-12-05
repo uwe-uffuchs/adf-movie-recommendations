@@ -33,6 +33,10 @@
 			"movies_schema_filename": {
 				"type": "string",
 				"value": "movies - schema.csv"
+			},
+			"ratings_schema_filename": {
+				"type": "string",
+				"value": "ratings - schema.csv"
 			}
 		},
 		"globalConfigurations": {
