@@ -24,7 +24,7 @@
 								"type": "Expression"
 							},
 							"container": {
-								"value": "@pipeline().parameters.filename",
+								"value": "@pipeline().parameters.container",
 								"type": "Expression"
 							}
 						}
